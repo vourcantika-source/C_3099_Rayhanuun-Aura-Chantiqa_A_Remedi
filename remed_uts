@@ -1,0 +1,206 @@
+using System;
+using System.Collections.Generic;
+
+// Soal 1 - Class, Object, Attribute, Method
+class Sekolah
+{
+    public string idSekolah;
+    public string namaSekolah;
+    public int jumlahPaketDiterima;
+
+    public Sekolah(string id, string nama)
+    {
+        idSekolah = id;
+        namaSekolah = nama;
+        jumlahPaketDiterima = 0;
+    }
+
+    public void TampilInfo()
+    {
+        Console.WriteLine($"ID: {idSekolah}, Nama: {namaSekolah}, Paket Diterima: {jumlahPaketDiterima}");
+    }
+}
+
+// Soal 2 & 5 - Encapsulation + Abstract Class
+abstract class PaketMBG
+{
+    private string idPaket;
+    private string namaPaket;
+    private int stokDapur;
+
+    public string IdPaket { get => idPaket; set => idPaket = value; }
+    public string NamaPaket { get => namaPaket; set => namaPaket = value; }
+    public int StokDapur
+    {
+        get => stokDapur;
+        set
+        {
+            if (value < 0) Console.WriteLine("Stok tidak boleh negatif!");
+            else stokDapur = value;
+        }
+    }
+
+    public PaketMBG(string id, string nama, int stok)
+    {
+        IdPaket = id;
+        NamaPaket = nama;
+        StokDapur = stok;
+    }
+
+    public bool KurangiStok(int jumlah)
+    {
+        if (jumlah <= 0) { Console.WriteLine("Jumlah harus lebih dari 0."); return false; }
+        if (jumlah > stokDapur) { Console.WriteLine("Stok tidak mencukupi."); return false; }
+        stokDapur -= jumlah;
+        return true;
+    }
+
+    // Soal 4 & 5 - Abstract method (wajib di-override turunan)
+    public abstract decimal HitungBiaya(int jumlah);
+
+    public virtual void TampilInfo()
+    {
+        Console.WriteLine($"ID: {IdPaket}, Nama: {NamaPaket}, Stok: {StokDapur}");
+    }
+}
+
+// Soal 3 & 4 - Inheritance + Polymorphism
+class PaketReguler : PaketMBG
+{
+    public PaketReguler(string id, string nama, int stok) : base(id, nama, stok) { }
+
+    public override decimal HitungBiaya(int jumlah) => jumlah * 15000m;
+
+    public override void TampilInfo()
+    {
+        base.TampilInfo();
+        Console.WriteLine("Jenis: Reguler | Isi: Nasi, Ayam, Sayur, Buah | Harga: Rp15.000");
+    }
+}
+
+class PaketKhusus : PaketMBG
+{
+    public string JenisDiet { get; set; }
+
+    public PaketKhusus(string id, string nama, int stok, string jenisDiet) : base(id, nama, stok)
+    {
+        JenisDiet = jenisDiet;
+    }
+
+    public override decimal HitungBiaya(int jumlah) => jumlah * 20000m;
+
+    public override void TampilInfo()
+    {
+        base.TampilInfo();
+        Console.WriteLine($"Jenis: Khusus | Diet: {JenisDiet} | Harga: Rp20.000");
+    }
+}
+
+// Soal 6 - Interface
+interface DapatDidistribusikan
+{
+    void KirimPaket();
+}
+
+class DistribusiMBG : DapatDidistribusikan
+{
+    public Sekolah SekolahTujuan;
+    public PaketMBG Paket;
+    public int Jumlah;
+
+    public DistribusiMBG(Sekolah sekolah, PaketMBG paket, int jumlah)
+    {
+        SekolahTujuan = sekolah;
+        Paket = paket;
+        Jumlah = jumlah;
+    }
+
+    public void KirimPaket()
+    {
+        if (Jumlah <= 0)
+        {
+            Console.WriteLine("Distribusi gagal! Jumlah paket harus lebih dari 0.");
+            return;
+        }
+        if (Jumlah > Paket.StokDapur)
+        {
+            Console.WriteLine($"Distribusi gagal! Stok tidak mencukupi (tersedia: {Paket.StokDapur}).");
+            return;
+        }
+        Paket.KurangiStok(Jumlah);
+        SekolahTujuan.jumlahPaketDiterima += Jumlah;
+        Console.WriteLine($"Distribusi MBG berhasil! Sebanyak {Jumlah} paket makanan telah dikirim ke sekolah {SekolahTujuan.namaSekolah}.");
+    }
+}
+
+// Soal 7 - PengelolaMBG (Opsional)
+// Hubungan PengelolaMBG dengan Sekolah dan PaketMBG adalah AGGREGATION:
+// objek Sekolah/PaketMBG dibuat di luar class ini dan hanya "didaftarkan",
+// sehingga tetap bisa hidup meski PengelolaMBG dihapus.
+class PengelolaMBG
+{
+    private List<Sekolah> daftarSekolah = new List<Sekolah>();
+    private List<PaketMBG> daftarPaket = new List<PaketMBG>();
+
+    public void TambahSekolah(Sekolah s) => daftarSekolah.Add(s);
+    public void TambahPaket(PaketMBG p) => daftarPaket.Add(p);
+
+    public void TampilkanDataMBG()
+    {
+        Console.WriteLine("\n--- Daftar Sekolah ---");
+        foreach (var s in daftarSekolah) s.TampilInfo();
+
+        Console.WriteLine("\n--- Daftar Paket ---");
+        foreach (var p in daftarPaket) p.TampilInfo();
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Soal 1
+        Sekolah s1 = new Sekolah("SKL-001", "SDN Jember 01");
+        Sekolah s2 = new Sekolah("SKL-002", "SDN Surabaya 03");
+        s1.TampilInfo();
+        s2.TampilInfo();
+
+        // Soal 2
+        PaketReguler reguler = new PaketReguler("PKT-R01", "Paket Reguler", 100);
+        PaketKhusus khusus   = new PaketKhusus("PKT-K01", "Paket Khusus", 50, "Rendah Gula");
+
+        reguler.StokDapur = -5;       // ditolak
+        reguler.KurangiStok(200);     // ditolak
+        reguler.KurangiStok(10);      // berhasil
+        Console.WriteLine($"Stok reguler setelah dikurangi 10: {reguler.StokDapur}");
+        reguler.StokDapur = 100;
+
+        // Soal 3
+        reguler.TampilInfo();
+        khusus.TampilInfo();
+
+        // Soal 4 & 5 - Polymorphism via variabel PaketMBG
+        PaketMBG p1 = new PaketReguler("R", "Reguler", 50);
+        PaketMBG p2 = new PaketKhusus("K", "Khusus", 30, "Vegetarian");
+        Console.WriteLine($"Biaya 20 paket reguler : Rp{p1.HitungBiaya(20):N0}");
+        Console.WriteLine($"Biaya 20 paket khusus  : Rp{p2.HitungBiaya(20):N0}");
+
+        // Soal 6
+        DistribusiMBG d1 = new DistribusiMBG(s1, reguler, 30);
+        d1.KirimPaket();
+
+        DistribusiMBG d2 = new DistribusiMBG(s2, reguler, 500);
+        d2.KirimPaket();
+
+        DistribusiMBG d3 = new DistribusiMBG(s2, khusus, 20);
+        d3.KirimPaket();
+
+        // Soal 7
+        PengelolaMBG pengelola = new PengelolaMBG();
+        pengelola.TambahSekolah(s1);
+        pengelola.TambahSekolah(s2);
+        pengelola.TambahPaket(reguler);
+        pengelola.TambahPaket(khusus);
+        pengelola.TampilkanDataMBG();
+    }
+}
